@@ -23,6 +23,5 @@
 @interface libphonenumberFormatter : NSFormatter
 
 @property(nonatomic, strong) NSString *countryCode; //defaults to NSLocale's currentLocale countryCode
-@property(nonatomic, assign) BOOL alwaysUseInternationalFormat; //defaults to NO
 
 @end
