@@ -32,15 +32,13 @@ return ret.trim();\
 })();";
 
 @interface libphonenumberFormatter ()
-
 - (void)_setupJSContext;
 - (NSString *)_runScript:(NSString *)scriptString;
-@property (nonatomic, retain) UIWebView *webView;
 @end
 
 @implementation libphonenumberFormatter
 
-@synthesize countryCode = _countryCode;
+static UIWebView *_webView;
 
 - (id)init
 {
@@ -66,15 +64,20 @@ return ret.trim();\
 
 - (void)_setupJSContext
 {
-    self.webView = [UIWebView new];
-    NSString *jsPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"libphonenumber" ofType:@"js"];
-    NSString *html = [NSString stringWithFormat:@"<html><head><script src=\"file://%@\" type=\"text/javascript\"></script></head><body></body></html>", jsPath];
-    [self.webView loadHTMLString:html baseURL:nil];
+    static dispatch_once_t singletonPredicate;
+    dispatch_once(&singletonPredicate, ^{
+        _webView = [UIWebView new];
+        NSString *jsPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"libphonenumber" ofType:@"js"];
+        NSString *html = [NSString stringWithFormat:@"<html><head><script src=\"file://%@\" type=\"text/javascript\"></script></head><body></body></html>", jsPath];
+        [_webView loadHTMLString:html baseURL:nil];
+    });
 }
 
 - (NSString *)_runScript:(NSString *)scriptString
 {
-    return [self.webView stringByEvaluatingJavaScriptFromString:scriptString];
+    @synchronized(_webView) {
+        return [_webView stringByEvaluatingJavaScriptFromString:scriptString];
+    }
 }
 
 @end
